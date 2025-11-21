@@ -1,0 +1,282 @@
+%% drives\_manual.tex
+%% Auto-generated manual describing contents of drives.ipynb
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{verbatim}
+\usepackage{longtable}
+\geometry{margin=1in}
+\title{Manual for `drives.ipynb`\newline}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+This document is a complete walkthrough and manual for the Jupyter notebook `drives.ipynb` in this project. The notebook performs the following high-level tasks:
+\begin{itemize}
+  \item Parses in-game JSON templates for ship drives, powerplants, space bodies and savegame data.
+  \item Produces a processed `drives` DataFrame that contains drive properties (thrust, specific impulse expressed as EV, mass, power and other derived metrics).
+  \item Computes resource availability and maximum propellant tanks per drive given game stage and mining sites.
+  \item Implements a numerical 2D variable-mass transfer solver (`transfer\_time`) to estimate travel times between circular orbits.
+  \item Loads or computes arrays `t\_R.npy` and `p\_R.npy` (precomputed transfer times and propellant tanks) and uses them for range/velocity calculations.
+  \item Implements a pursuit/intercept model to estimate the fraction of alien ships a given drive can catch.
+  \item Computes combined numeric metrics and a final drive rating, and generates various diagnostic plots.
+\end{itemize}
+
+The remainder of this manual follows the notebook structure and documents the key functions, formulas, assumptions, and the interpretation of plots that the notebook produces.
+
+
+\section{Data parsing}
+The notebook parses multiple JSON templates found in the `raw/` folder. These include:
+\begin{itemize}
+  \item `TIDriveTemplate.json` — drive templates.
+  \item `TIPowerPlantTemplate.json` — power plant templates.
+  \item `TIProjectTemplate.json` and `TITechTemplate.json` — technology and project templates, used to compute research-point (RP) costs.
+  \item `TISpaceBodyTemplate.json` — space bodies and their semi-major axes (SMA).
+  \item `save.json` and `late\_save.json` — used to extract mines (resource sites) and alien ship stats respectively.
+\end{itemize}
+
+The parsing functions normalize keys and produce DataFrame rows. Example key normalizations include mapping different JSON keys for per-tank material lists to canonical names like `water`, `volatiles`, `metals`, `nobleMetals`, and `fissiles`.
+
+\section{Drive table construction}
+`drives` DataFrame columns created or normalized include:
+\begin{itemize}
+  \item `name` — human-friendly drive name.
+  \item `class` — drive class or required power plant family; later rewritten for more specific class labels.
+  \item `thrust` (in Newtons), `EV` (in km/s as given in templates), `specific\_power`, `efficiency`, `flat\_mass` (tons), `required\_power\_plant`, `thrust\_cap`, `cooling`, `propellant`.
+  \item Per-tank resource consumption (water, volatiles, metals, nobleMetals, fissiles, antimatter) used later to compute tank caps.
+\end{itemize}
+
+The notebook applies small corrections to some classes (e.g., multiplying non-pulse drives' thrust and flat mass by 6) to better reflect packaging and balancing assumptions.
+
+Derived columns include:
+\begin{itemize}
+  \item `power` estimated from thrust, EV and effect: \texttt{drives['power'] = drives['thrust']*drives['EV']/2000000/drives['effect']} (units consistent with how the notebook author defines them).
+  \item Later `dry\_mass` is computed by adding hull, plant mass and radiator mass depending on the drive's RP bin and cooling type.
+\end{itemize}
+
+\section{Alien ships extraction}
+Alien ship statistics are extracted from a save file using a recursive traversal function. For each encountered object that has the keys
+\texttt{cruiseAcceleration\_mps2}, \texttt{currentDeltaV\_kps}, and \texttt{currentMaxDeltaV\_kps} the snippet captures those values unless the object is identified as an alien module. The resulting DataFrame `aliens` contains three columns: `cruise\_accel`, `dv\_current`, and `dv\_max`.
+
+These are used to compute `dv\_share = dv\_current/dv\_max` and to filter `non\_stat = aliens.loc[aliens['dv\_share']<0.95]` which is used for intercept probability calculations.
+
+\section{Research Points (RP) and game stage bins}
+The notebook builds a dependency graph from `TIProjectTemplate.json` and `TITechTemplate.json` to compute research costs for projects. Two metrics are computed:
+\begin{itemize}
+  \item \textbf{RP\_raw} — total research cost including all prerequisites (``full branch cost'').
+  \item \textbf{RP\_focus} — a pruned/weighted cost that attempts to remove nodes that are broadly useful (high out-degree) so the metric focuses on technology exclusive to that drive family.
+\end{itemize}
+
+Drives are then assigned to research-point bins `RP\_bins` using cutoffs `bins = [0,2e4,1e5,2.97e5,1e6,1e7]`. These bins influence how drives are buffed for different game stages (for instance hydrogen-fueled drives get EV multipliers depending on bin, thermal drives get thrust multipliers, etc.).
+
+\section{Resource availability and tank caps}
+\label{sec:tankcap}
+The notebook parses `raw/save.json` to find mining sites and extract per-site daily resource yields: `water\_day`, `volatiles\_day`, `metals\_day`, `nobles\_day`, `fissiles\_day` and then associates each site with the semi-major axis of its parent body.
+
+Given the current game stage (derived from `RP\_bins`), a set of viable SMA intervals is selected (e.g., Earth+Mars for early stages, up to Jupiter later). For each drive, the code computes a per-tank material vector (including an `antimatter` penalty when relevant) and greedily accumulates the best mines for the most limiting resource to determine how many tanks can realistically be supported. The result is saved into `drives['tank\_cap']` and is used throughout the notebook to limit the tested propellant tank counts.
+
+Key assumptions:
+\begin{itemize}
+  \item `n\_mines` per stage is limited (e.g., [6,12,18,24,30]) — this models how many mines the player is realistically operating.
+  \item `full\_refil` is a small fleet demand factor (logspace between 0.6 and 6) representing how many ships you need to refill monthly — it reduces tank availability.
+  \item Mining efficiency and hull/radiator/plant mass assumptions are captured in constants near the tank-cap code.
+\end{itemize}
+
+\section{Powerplant matching}
+A helper `match\_powerplants(drives, plants)` selects the power plant family closest in RP to each drive's `required\_power\_plant` (or falls back to a general plant). The chosen plant's `effect` and `sp\_power` are attached to the drive to compute plant mass and radiator mass when computing `dry\_mass`.
+
+\section{Dry mass, thrust and DV}
+Dry mass is assembled from:
+\begin{itemize}
+  \item `flat\_mass` (base hardware),
+  \item `power * specific\_power` (plant mass),
+  \item hull mass (by RP bin),
+  \item radiator mass scaling by plant inefficiency and power (unless `cooling == 'Open'`).
+\end{itemize}
+
+Derived metrics:
+\begin{align*}
+m\_0 & = m\_{dry} + m\_{propellant} \\
+m\_f & = m\_{dry} \\
+v\_e & = EV\ (in\ m/s)\\
+\text{accel} & = \frac{thrust}{m\_0}\quad(\text{m/s}^2)\\
+\text{comb\_ac} & = thrust\_cap * accel / 9.8 \quad(\text{gees})\\
+\Delta V & = v\_e \ln\frac{m\_0}{m\_f}
+\end{align*}
+
+where EV from JSON is converted to m/s when used in the rocket equation.
+
+\section{Transfer solver: \texttt{transfer\_time}}
+\label{sec:transfer}
+This is the core numerical routine for estimating the travel time between two circular orbits of radii $r\_1$ and $r\_2$ around the Sun, given drive parameters. Key points:
+
+\begin{itemize}
+  \item Uses Sun GM: $GM = 1.32712440018\times10^{20}\ \mathrm{m}^3/\mathrm{s}^2$.
+  \item Approximates motion in 2D and integrates Newton's equations with thrust and gravity applied explicitly with a fixed time step `dt` (default 1 hour = 3600 s). Max integration time is `max\_days` (default 3000 days).
+  \item The solver splits total available $\Delta V$ into two phases: acceleration and braking. The total available $\Delta V$ is computed from the rocket equation:
+  $$\Delta V\_{tot} = v\_e \ln\left(\frac{m\_{dry} + m\_{prop}}{m\_{dry}}\right).$$
+  It then sets
+  $$\Delta V\_{acc} = \tfrac12 \left(\Delta V\_{tot} + (v\_1 - v\_2)\right),\\
+  \Delta V\_{brk} = \tfrac12 \left(\Delta V\_{tot} - (v\_1 - v\_2)\right),$$
+  where $v\_1=\sqrt{GM/r\_1}$ and $v\_2=\sqrt{GM/r\_2}$ are the initial circular speeds.
+  If either $\Delta V\_{acc}$ or $\Delta V\_{brk}$ is negative the function returns -1 (invalid for a simple tangential flip scenario).
+
+  \item The solver integrates a forward craft (starting at $r\_1$ with mass $m\_{dry}+m\_{prop}$) and a backward/mirror craft (starting at $r\_2$ with mass $m\_{dry}$). The two craft are advanced under thrust (when they still have allocated DV left) and gravity until their orbital radii cross. The return value is twice the elapsed time (converted to weeks): the forward and backward ships meet in the middle.
+\end{itemize}
+
+The notebook's author notes that this simple 2D variable-mass integrator reproduces torch-drive times to within ~5–10% of in-game values and low-thrust transfers to within ~20–30% due to neglect of ephemerides.
+
+\subsection{Algorithmic caveats and parameters}
+\begin{itemize}
+  \item Integration step `dt` matters — smaller `dt` increases accuracy but also compute time.
+  \item For low-thrust drives or cases requiring precise phasing, Lambert/ephemeris-based solvers would be more accurate, but the implemented method is robust and fast enough for comparative analysis.
+\end{itemize}
+
+\section{Precomputed arrays: `t\_R.npy` and `p\_R.npy`}
+The notebook explains that expensive transfer-time computations are performed offline using `get\_times.py`. The two saved NumPy arrays are:
+\begin{description}
+  \item[`t\_R.npy`] shape: (N\_drives, N\_radii) — for each drive and each radius between 1AU and ~30AU the notebook stores the transfer time (weeks) averaged over the tested propellant tanks using
+  \[ expect\_t = \int t(p) dp / (p\_{max} - p\_{min}) \]
+  \item[`p\_R.npy`] shape: (N\_drives, N\_radii) — the propellant tank count that produced that averaged time (one representative tank count per radius/drive pair).
+\end{description}
+
+When present, these arrays are loaded and used to compute orbit-averaged velocities and ranges much more quickly than recomputing transfer times on the fly.
+
+\section{Velocity and Range calculations}
+Using the precomputed `t\_R` and `p\_R` arrays, the notebook:
+\begin{itemize}
+  \item computes for each drive a per-radius velocity $v(R)=R/t(R)$ (AU/week), where $t(R)$ is the expected transfer time to radius $R$ (weeks),
+  \item computes an \textbf{orbit-averaged speed} for each drive by integrating $v(R)$ over available radii:
+  $$\bar v = \frac{\int v(R)\,dR}{R\_{max}-R\_{min}},$$
+  \item computes `rangeR` as $R\_{max}-1$ where $R\_{max}$ is the maximum radius reachable (1 is subtracted so Earth orbit is baseline),
+  \item selects a `cost\_v` (number of tanks) that produces the averaged speed using a nearest-match approach.
+\end{itemize}
+
+These numbers are then used as part of the final rating.
+
+\section{Pursuit / Intercept model}
+The notebook provides `get\_pursuit\_matrix(a\_hum, dv\_hum, a\_ayy, dv\_ayy, D=2e8)` which calculates a boolean matrix of whether a human ship with cruise acceleration `a\_hum` and delta-V `dv\_hum` can catch an alien ship with `a\_ayy` and `dv\_ayy` starting at separation `D` (default 200,000 km). Implementation details:
+
+\begin{align*}
+a\_{H} &\leftarrow a\_{hum}\ (array)\\
+dv\_{H} &\leftarrow dv\_{hum}\ (array)\\
+a\_{A} &\leftarrow a\_{ayy}\ (array)\\
+dv\_{A} &\leftarrow dv\_{ayy}\ (array)\\
+\end{align*}
+
+The function computes an approximate required DV for a pursuit based on the smaller of the two accelerations and the acceleration difference:
+$$\text{dv\_need} = a\_{min} \sqrt{ \frac{2 D}{a\_{max}-a\_{min}} }.$$ (see code for exact form).
+
+It then uses a small logical model:
+\begin{itemize}
+  \item If human acceleration $a\_H > a\_A$ then check whether human DV $dv\_H$ exceeds `dv\_need`.
+  \item If alien acceleration $a\_A > a\_H$ then check whether alien DV $dv\_A$ is less than `dv\_need` (i.e. alien cannot escape).
+\end{itemize}
+
+The function returns an elementwise logical matrix over all pairs; the notebook averages across alien ships to get a fraction of catchable alien ships for each tank count.
+
+\section{Aggregating pursuit probabilities and plotting}
+For each drive the notebook computes: the mean pursuit probability averaged over permissible propellant tank counts (limited by `tank\_cap`), and selects a representative number of tanks `cost\_p` that achieves that average.
+
+On the plot the notebook displays (for every drive) the chosen `cost\_p` vs `pursue` (the average fraction of aliens catchable), with points colored by drive `class` and annotated by shortened drive names. A legend is created showing drive classes.
+
+\section{Final rating}
+The notebook composes a final `rating` for each drive using a log-normalization function and combining metrics:
+\begin{align*}
+\text{rating} &= \text{log\_norm}(\, veloc \times pursue \times inv\_cost \times range^2 \,)\\
+\text{where } inv\_cost &= 1/(cost\_v + cost\_p).
+\end{align*}
+
+The log-normalization rescales positive arrays to the 0–100 range using a log10 transform, mapping the minimum positive value to 0 and the maximum to 100. Drives with extreme `inv\_cost` outliers are clamped to 0 to avoid misranking.
+
+The final plot shows `rating` vs `RP\_raw` (research cost on a log scale). Points are colored by class, labeled with shortened names and the numeric rating.
+
+\section{Important figures and their interpretation}
+The notebook produces several figures. For each figure below we provide a short description of how to read it and what it is useful for:
+
+\begin{enumerate}
+  \item Propellant tanks vs Transfer time (per-drive curves): 
+    \begin{itemize}
+      \item Shows transfer time (weeks) as a function of propellant tanks for different drives and for two example target radii (1.2 AU and 5.2 AU). Curves are usually logarithmic in shape (rocket equation dominance).
+      \item Useful to compare fuel-time tradeoffs per drive.
+    \end{itemize}
+
+  \item Precomputed `t\_R` plots: Time vs radius and Speed vs radius.
+    \begin{itemize}
+      \item Left: radius vs expected travel time (averaged over tank choices).
+      \item Right: radius vs average speed $R/t(R)$ (AU/week), giving a per-radius effective speed.
+    \end{itemize}
+
+  \item Orbit-averaged speed vs Propellant tanks (scatter):
+    \begin{itemize}
+      \item Each drive is a point with x = representative tank cost and y = orbit-averaged speed. Color shows drive class. Labels are shortened drive names.
+    \end{itemize}
+
+  \item Intercept chance vs Propellant tanks (scatter):
+    \begin{itemize}
+      \item x = representative tanks, y = fraction of alien ships catchable (averaged over missile counts). Helps compare how survivable / intercept-capable drives are.
+    \end{itemize}
+
+  \item Final rating vs Research Points (scatter):
+    \begin{itemize}
+      \item x-axis: total RP cost (log scale). y-axis: final rating (0--100). Shows how useful drives are across tech eras and lets you select candidate drives for early/late game.
+    \end{itemize}
+\end{enumerate}
+
+\section{Files referenced by the notebook}
+Important files found in the project directory `d:/tmp/TI\_drives`:
+\begin{itemize}
+  \item `drives.ipynb` — the notebook itself (this manual documents it).
+  \item `raw/TIDriveTemplate.json`, `raw/TIPowerPlantTemplate.json`, `raw/TIProjectTemplate.json`, `raw/TITechTemplate.json`, `raw/TISpaceBodyTemplate.json` — templates parsed by the notebook.
+  \item `raw/save.json`, `raw/late\_save.json` — used to parse mines and alien ship stats.
+  \item `get\_times.py` — a separate script (described in the notebook) that can compute `t\_R.npy` and `p\_R.npy` (optimized with `numba` for speed).
+  \item Precomputed arrays: `t\_R.npy` and `p\_R.npy` (if present, the notebook loads them to avoid recomputation).
+\end{itemize}
+
+\section{How to re-run expensive calculations}
+If `t\_R.npy` and `p\_R.npy` are not available or you wish to recompute them with potentially higher resolution or other parameters, run `get\_times.py` in the project root. The notebook notes that the script uses `numba` for speed; install `numba` with:
+\begin{verbatim}
+pip install numba
+\end{verbatim}
+
+Typical parameters to tune when recomputing:
+\begin{itemize}
+  \item number of radii between 1 and 30 AU,
+  \item range and density of propellant tank counts to test (1..200 in log space by default),
+  \item time step `dt` inside `transfer\_time` (smaller = more accurate, slower).
+\end{itemize}
+
+\section{Developer notes and suggestions}
+\begin{itemize}
+  \item Consider persisting the computed `drives` DataFrame to a CSV after parsing and enrichment for reproducibility (the notebook already writes `drives.csv`).
+  \item If you require higher-accuracy transfer times for low-thrust drives, consider implementing a Lambert-based solver or integrating with a small ephemeris/propagation package.
+  \item The pursuit DV formula is a heuristic — if you need more realistic pursuit/engagement modeling, a full relative-motion simulation should be used.
+\end{itemize}
+
+\section{Appendix: Important code snippets}
+\subsection{Rocket equation (used throughout)}
+\begin{equation*}
+\Delta V = v\_e \ln\left(\frac{m\_0}{m\_f}\right)
+\end{equation*}
+
+\subsection{transfer\_time signature}
+\begin{verbatim}
+def transfer\_time(r1, r2, ve, m\_dry, T, mp0, dt=3600.0, max\_days=3000):
+    # returns time in weeks, or -1 if not possible
+\end{verbatim}
+
+\subsection{pursuit function signature}
+\begin{verbatim}
+def get\_pursuit\_matrix(a\_hum, dv\_hum, a\_ayy, dv\_ayy, D=2e8):
+    # returns boolean matrix human x alien
+\end{verbatim}
+
+\clearpage
+\section{Acknowledgements}
+This manual was auto-generated by processing the `drives.ipynb` notebook. It aims to capture the code intent, equations, assumptions and the meaning of figures. For deep changes or bug fixes refer to the notebook cells described here and the associated `raw/` JSON templates.
+
+\end{document}
