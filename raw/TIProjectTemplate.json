@@ -3164,7 +3164,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 50,
+   "factionAvailableChance": 100,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 5,
    "maxUnlockChance": 100,
@@ -5908,7 +5908,7 @@
    "techCategory": "Materials",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "HabInfrastructure",
-   "researchCost": 1000,
+   "researchCost": 2500,
    "prereqs": [
       "Project_PlatformCore",
       "Project_SolarCollector",
@@ -5928,11 +5928,12 @@
    "techCategory": "Materials",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "HabInfrastructure",
-   "researchCost": 3000,
+   "researchCost": 5000,
    "prereqs": [
       "Project_OrbitalCore",
       "Project_SolarMirror",
-      "Superalloys"
+      "Superalloys",
+      "AppliedArtificialIntelligence"
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
@@ -5948,11 +5949,13 @@
    "techCategory": "Materials",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "HabInfrastructure",
-   "researchCost": 10000,
+   "researchCost": 20000,
    "prereqs": [
       "Project_RingCore",
       "Project_SolarMirrorArray",
-      "AdministrationAlgorithms"
+      "Diamondoids",
+      "AdministrationAlgorithms",
+      "Ultracapacitors"
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
@@ -6015,7 +6018,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 100,
+   "factionAvailableChance": 50,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 5,
    "maxUnlockChance": 10,
@@ -6035,7 +6038,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 100,
+   "factionAvailableChance": 75,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 5,
    "maxUnlockChance": 15,
@@ -6422,7 +6425,7 @@
    "AI_techRole": "SpaceDevelopment",
    "AI_criticalTech": true,
    "AI_projectRole": "Propulsion",
-   "researchCost": 15000,
+   "researchCost": 10000,
    "prereqs": [
       "MagneticNozzles",
       "Project_FusionTokamakII"
@@ -6461,7 +6464,7 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 28000,
+   "researchCost": 20000,
    "prereqs": [
       "MagneticNozzles",
       "Project_MirrorCellFusionReactorIII"
@@ -6480,7 +6483,7 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 20000,
+   "researchCost": 15000,
    "prereqs": [
       "MagneticNozzles",
       "Project_MirrorCellFusionReactorII"
@@ -6613,7 +6616,7 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 15000,
+   "researchCost": 10000,
    "prereqs": [
       "Project_MinimagOrion"
    ],
@@ -6631,7 +6634,7 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 10000,
+   "researchCost": 5000,
    "prereqs": [
       "Project_Z-pinchMicrofissionDrive"
    ],
@@ -6649,7 +6652,7 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 7500,
+   "researchCost": 5000,
    "prereqs": [
       "AntimatterContainment",
       "FissionPulseDrives"
@@ -6673,7 +6676,7 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 5000,
+   "researchCost": 2000,
    "prereqs": [
       "Project_UltracoldNeutronContainment",
       "FissionPulseDrives"
@@ -6751,6 +6754,8 @@
    "AI_projectRole": "Propulsion",
    "researchCost": 20000,
    "prereqs": [
+      "SuperconductingMagnets",
+      "Superalloys",
       "Project_GasCoreFissionReactorVI"
    ],
    "oneTimeGlobally": false,
@@ -6770,6 +6775,7 @@
    "AI_projectRole": "Propulsion",
    "researchCost": 15000,
    "prereqs": [
+      "MagneticForceManipulation",
       "Project_GasCoreFissionReactorV"
    ],
    "oneTimeGlobally": false,
@@ -6787,8 +6793,9 @@
    "AI_techRole": "SpaceDevelopment",
    "AI_criticalTech": true,
    "AI_projectRole": "Propulsion",
-   "researchCost": 4000,
+   "researchCost": 5000,
    "prereqs": [
+      "Superalloys",
       "Project_GasCoreFissionReactorII"
    ],
    "oneTimeGlobally": false,
@@ -6845,13 +6852,14 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 16000,
+   "researchCost": 10000,
    "prereqs": [
+      "MagneticForceManipulation",
       "Project_GasCoreFissionReactorIV"
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 30,
+   "factionAvailableChance": 40,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 5,
    "maxUnlockChance": 15,
@@ -6863,9 +6871,10 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 1500,
+   "researchCost": 2000,
    "prereqs": [
-      "Project_GasCoreFissionReactorII"
+      "Superalloys",
+      "Project_GasCoreFissionReactorIII"
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
@@ -6881,7 +6890,7 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 2500,
+   "researchCost": 1500,
    "prereqs": [
       "Project_QuartzDrive"
    ],
@@ -6899,7 +6908,7 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 1000,
+   "researchCost": 250,
    "prereqs": [
       "Project_GasCoreFissionReactorI"
    ],
@@ -6917,10 +6926,11 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 2500,
+   "researchCost": 1500,
    "prereqs": [
       "Project_VaporCoreFissionReactorIII",
-      "Project_CavityDrive"
+      "Project_CavityDrive",
+      "SuperconductingMagnets"
    ],
    "altPrereq0": "Project_GasCoreFissionReactorII",
    "oneTimeGlobally": false,
@@ -6943,7 +6953,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 60,
+   "factionAvailableChance": 50,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 5,
    "maxUnlockChance": 60,
@@ -6955,10 +6965,10 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 2500,
+   "researchCost": 1500,
    "prereqs": [
       "Project_VortexDrive",
-      "Project_VaporCoreFissionReactorII"
+      "Project_VaporCoreFissionReactorIII"
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
@@ -6974,9 +6984,9 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 2500,
+   "researchCost": 1500,
    "prereqs": [
-      "Project_VaporCoreFissionReactorI"
+      "Project_VaporCoreFissionReactorII"
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
@@ -7014,7 +7024,7 @@
    "AI_techRole": "SpaceDevelopment",
    "AI_criticalTech": true,
    "AI_projectRole": "Propulsion",
-   "researchCost": 7000,
+   "researchCost": 5000,
    "prereqs": [
       "Project_LarsDrive",
       "Project_MoltenCoreFissionReactorII"
@@ -7034,7 +7044,7 @@
    "AI_techRole": "SpaceDevelopment",
    "AI_criticalTech": true,
    "AI_projectRole": "Propulsion",
-   "researchCost": 3000,
+   "researchCost": 2000,
    "prereqs": [
       "Project_MoltenCoreFissionReactorII"
    ],
@@ -7108,13 +7118,12 @@
    "techCategory": "SpaceScience",
    "AI_techRole": "SpaceDevelopment",
    "AI_projectRole": "Propulsion",
-   "researchCost": 5000,
+   "researchCost": 4000,
    "prereqs": [
-      "ArcLasers",
+      "SuperconductingMagnets",
       "Project_PulsarDrive",
       "Project_SolidCoreFissionReactorV"
    ],
-   "altPrereq0": "ParticleCannon",
    "oneTimeGlobally": false,
    "repeatable": false,
    "factionAvailableChance": 40,
@@ -7131,9 +7140,11 @@
    "AI_projectRole": "Propulsion",
    "researchCost": 2000,
    "prereqs": [
+      "ArcLasers",
       "Project_NervaDrive",
       "Project_SolidCoreFissionReactorIII"
    ],
+   "altPrereq0": "ParticleCannon",
    "oneTimeGlobally": false,
    "repeatable": false,
    "factionAvailableChance": 100,
@@ -7149,7 +7160,7 @@
    "AI_techRole": "SpaceDevelopment",
    "AI_criticalTech": true,
    "AI_projectRole": "Propulsion",
-   "researchCost": 5000,
+   "researchCost": 2500,
    "prereqs": [
       "Project_Dumbo",
       "Project_SolidCoreFissionReactorIV"
@@ -7212,7 +7223,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 40,
+   "factionAvailableChance": 20,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 10,
    "maxUnlockChance": 60,
@@ -7248,7 +7259,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 40,
+   "factionAvailableChance": 20,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 10,
    "maxUnlockChance": 60,
@@ -7266,7 +7277,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 40,
+   "factionAvailableChance": 20,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 25,
    "maxUnlockChance": 60,
@@ -7359,7 +7370,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 100,
+   "factionAvailableChance": 10,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 5,
    "maxUnlockChance": 30,
@@ -7378,7 +7389,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 100,
+   "factionAvailableChance": 10,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 5,
    "maxUnlockChance": 50,
@@ -7452,7 +7463,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 100,
+   "factionAvailableChance": 10,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 5,
    "maxUnlockChance": 50,
@@ -7532,7 +7543,7 @@
    "altPrereq0": "Project_FuelCellIII",
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 50,
+   "factionAvailableChance": 10,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 15,
    "maxUnlockChance": 50,
@@ -7551,7 +7562,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 50,
+   "factionAvailableChance": 20,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 15,
    "maxUnlockChance": 50,
@@ -7645,7 +7656,7 @@
    "AI_techRole": "SpaceDevelopment",
    "AI_criticalTech": true,
    "AI_projectRole": "Boost",
-   "researchCost": 100,
+   "researchCost": 500,
    "prereqs": [
       "AdvancedChemicalRocketry",
       "Project_CryogenicLiquid-FuelRockets"
@@ -7669,7 +7680,7 @@
    "AI_techRole": "SpaceDevelopment",
    "AI_criticalTech": true,
    "AI_projectRole": "Boost",
-   "researchCost": 250,
+   "researchCost": 5000,
    "prereqs": [
       "AdvancedHydrogenContainment",
       "Project_ImprovedInterplanetaryRockets"
@@ -8070,6 +8081,7 @@
    "AI_projectRole": "PowerPlant",
    "researchCost": 1500,
    "prereqs": [
+      "Superalloys",
       "CarbonNanotubes",
       "Project_VaporCoreFissionReactorII"
    ],
@@ -8400,7 +8412,8 @@
    "researchCost": 35000,
    "prereqs": [
       "ProtonProtonFusion",
-      "Project_FusionTokamakIV"
+      "Project_FusionTokamakIV",
+      "Project_Exotics"
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
@@ -8762,7 +8775,7 @@
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 50,
+   "factionAvailableChance": 100,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 10,
    "maxUnlockChance": 100,
@@ -9105,9 +9118,9 @@
    "researchCost": 25000,
    "prereqs": [
       "Diamondoids",
-      "Project_AcheronNuclearTorpedoBay"
+      "Project_AcheronNuclearTorpedoBay",
+      "Project_Exotics"
    ],
-   "altPrereq0": "Project_Exotics",
    "oneTimeGlobally": false,
    "repeatable": false,
    "factionAvailableChance": 40,
@@ -14783,12 +14796,11 @@
    "researchCost": 5000,
    "prereqs": [
       "IndustrializationofSpace",
-      "MolecularAssemblers"
+      "AdvancedAtomicManipulation"
    ],
    "oneTimeGlobally": false,
    "repeatable": false,
-   "factionAvailableChance": 50,
-   "factionAlways": "ExploitCouncil",
+   "factionAvailableChance": 100,
    "initialUnlockChance": 0,
    "deltaUnlockChance": 10,
    "maxUnlockChance": 70,
