@@ -116,7 +116,8 @@ for k in ks:
             mp0 = pms[i] * 1e5
             tts[i] = transfer_time_numba(r1, r2, ve, m_dry, T, mp0)
 
-        mask = tts > 0
+        dt = tts[:-1] - tts[1:]
+        mask = np.where(dt>0)[0]
         p_good = pms[mask]
         t_good = tts[mask]
 
